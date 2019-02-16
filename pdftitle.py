@@ -379,23 +379,26 @@ class TextOnlyDevice(PDFDevice):
 
 def get_title(pdf_file):
     with open(pdf_file, 'rb') as raw_file:
-        parser = PDFParser(raw_file)
-        # if pdf is protected with a pwd, 2nd param here is password
-        doc = PDFDocument(parser)
-        # pdf may not allow extraction
-        if doc.is_extractable:
-            rm = PDFResourceManager()
-            dev = TextOnlyDevice(rm)
-            interpreter = TextOnlyInterpreter(rm, dev)
-            for page in PDFPage.create_pages(doc):
-                interpreter.process_page(page)
-                break
-            dev.recover_last_paragraph()
-            sizes = dev.paragraph_map.keys()
-            verbose('there are ', len(sizes), ' text blocks with different font sizes')
-            max_size = max(sizes)
-            verbose('max font size', max_size);
-            return ''.join(dev.paragraph_map[max_size])
+        return get_title_file_like(pdf_file=raw_file)
+
+def get_title_file_like(pdf_file):
+    parser = PDFParser(pdf_file)
+    # if pdf is protected with a pwd, 2nd param here is password
+    doc = PDFDocument(parser)
+    # pdf may not allow extraction
+    if doc.is_extractable:
+        rm = PDFResourceManager()
+        dev = TextOnlyDevice(rm)
+        interpreter = TextOnlyInterpreter(rm, dev)
+        for page in PDFPage.create_pages(doc):
+            interpreter.process_page(page)
+            break
+        dev.recover_last_paragraph()
+        sizes = dev.paragraph_map.keys()
+        verbose('there are ', len(sizes), ' text blocks with different font sizes')
+        max_size = max(sizes)
+        verbose('max font size', max_size);
+        return ''.join(dev.paragraph_map[max_size])
 
 def run():
     try:
